@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DHM Procurement &amp; Progress Tracker</title>
+<script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,Helvetica,sans-serif;font-size:13px;background:#eef2f7;color:#1f2937}
+input,select,button,textarea{font-family:inherit;font-size:13px}
+a{color:#2563eb}
+
+/* login */
+.login-page{min-height:100vh;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,#0b1e38,#1a3558 55%,#2b4d7c);padding:20px}
+.login-card{width:100%;max-width:400px;background:#fff;border-radius:12px;overflow:hidden;
+  box-shadow:0 12px 50px rgba(0,0,0,.35)}
+.login-hd{background:#15325a;color:#fff;padding:22px 26px}
+.login-hd .logo{font-size:30px;margin-bottom:6px}
+.login-hd .t{font-size:15px;font-weight:bold}
+.login-hd .s{font-size:11px;opacity:.65;margin-top:3px;line-height:1.5}
+.login-bd{padding:22px 26px}
+.fld{margin-bottom:14px}
+.fld label{display:block;font-size:11px;font-weight:bold;color:#475569;
+  text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px}
+.fld input,.fld select{width:100%;padding:9px 11px;border:1.5px solid #d1d5db;
+  border-radius:6px;outline:none}
+.fld input:focus,.fld select:focus{border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+.btn{padding:9px 16px;border:none;border-radius:6px;cursor:pointer;font-weight:bold}
+.btn-primary{background:#15325a;color:#fff}
+.btn-primary:hover{background:#2563eb}
+.btn-block{width:100%;padding:11px}
+.err{background:#fef2f2;border:1px solid #fca5a5;color:#dc2626;padding:8px 11px;
+  border-radius:5px;font-size:12px;margin-bottom:12px}
+.hint{font-size:11px;color:#94a3b8;text-align:center;margin-top:12px}
+
+/* shell */
+.topbar{background:#15325a;color:#fff;padding:11px 18px;display:flex;align-items:center;
+  gap:14px;flex-wrap:wrap}
+.topbar .title{font-size:15px;font-weight:bold}
+.topbar .spacer{flex:1}
+.pill{font-size:11px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);
+  border-radius:20px;padding:4px 11px;display:flex;align-items:center;gap:7px}
+.tb-btn{font-size:11px;padding:4px 10px;border-radius:5px;cursor:pointer;
+  background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.25);color:#fff}
+.tb-btn:hover{background:rgba(255,255,255,.22)}
+.tb-btn.danger:hover{background:rgba(200,40,40,.4);color:#fecaca}
+.tabs{display:flex;background:#11243f;border-bottom:2px solid #2b4d7c}
+.tab{padding:9px 18px;color:rgba(255,255,255,.6);cursor:pointer;background:none;border:none;
+  border-bottom:2px solid transparent;margin-bottom:-2px;font-size:13px}
+.tab:hover{color:#fff}
+.tab.active{color:#fff;font-weight:bold;border-bottom-color:#60a5fa}
+.wrap{max-width:1280px;margin:0 auto;padding:16px 18px}
+
+/* toolbar */
+.toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.toolbar .grow{flex:1}
+.search{padding:8px 11px;border:1px solid #d1d5db;border-radius:6px;min-width:200px}
+.filter-sel{padding:8px 11px;border:1px solid #d1d5db;border-radius:6px;background:#fff}
+
+/* cards/table */
+.card{background:#fff;border:1px solid #e2e8f0;border-radius:9px;overflow:hidden}
+.tbl-scroll{overflow-x:auto}
+table.grid{width:100%;border-collapse:collapse;font-size:12px}
+table.grid th{background:#dce7f0;color:#15325a;text-align:left;padding:8px 10px;
+  font-size:11px;white-space:nowrap;border-bottom:1px solid #c4d4e3;position:sticky;top:0}
+table.grid td{padding:7px 10px;border-bottom:1px solid #f1f5f9;vertical-align:top}
+table.grid tbody tr:nth-child(even) td{background:#f8fafc}
+table.grid tbody tr:hover td{background:#eff6ff}
+.tag{display:inline-block;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:bold;white-space:nowrap}
+.tag-div1{background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe}
+.tag-div2{background:#fef3f2;color:#c2410c;border:1px solid #fed7aa}
+.tag-gray{background:#f1f5f9;color:#475569;border:1px solid #e2e8f0}
+.bar{height:7px;background:#e5e7eb;border-radius:4px;overflow:hidden;min-width:70px}
+.bar > i{display:block;height:100%;background:#22c55e}
+.bar.fin > i{background:#3b82f6}
+.muted{color:#94a3b8}
+.right{text-align:right}
+.mono{font-family:ui-monospace,Menlo,Consolas,monospace}
+.linkbtn{background:none;border:none;color:#2563eb;cursor:pointer;padding:2px 5px;font-size:12px}
+.linkbtn:hover{text-decoration:underline}
+.linkbtn.del{color:#dc2626}
+.empty{padding:40px;text-align:center;color:#94a3b8;font-style:italic}
+
+/* modal */
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100;display:flex;
+  align-items:flex-start;justify-content:center;padding:30px 16px;overflow-y:auto}
+.modal{background:#fff;border-radius:11px;width:100%;max-width:720px;box-shadow:0 12px 50px rgba(0,0,0,.3)}
+.modal-hd{background:#15325a;color:#fff;padding:14px 20px;border-radius:11px 11px 0 0;
+  display:flex;justify-content:space-between;align-items:center}
+.modal-hd .x{cursor:pointer;font-size:18px;opacity:.8}
+.modal-hd .x:hover{opacity:1}
+.modal-bd{padding:18px 20px;max-height:70vh;overflow-y:auto}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+@media(max-width:640px){.grid2,.grid3{grid-template-columns:1fr}}
+.modal-ft{padding:13px 20px;background:#f8fafc;border-top:1px solid #e2e8f0;
+  display:flex;justify-content:flex-end;gap:9px;border-radius:0 0 11px 11px}
+.btn-ghost{background:#f1f5f9;color:#374151;border:1px solid #d1d5db}
+.btn-ghost:hover{background:#e2e8f0}
+.btn-danger{background:#dc2626;color:#fff}
+.btn-danger:hover{background:#b91c1c}
+.sec-label{font-size:11px;font-weight:bold;color:#15325a;text-transform:uppercase;
+  letter-spacing:.04em;margin:14px 0 8px;border-bottom:1px solid #e2e8f0;padding-bottom:4px}
+.sec-label:first-child{margin-top:0}
+
+/* toast */
+#toast{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:200}
+.toast{padding:9px 16px;border-radius:7px;font-size:12px;font-weight:bold;
+  box-shadow:0 4px 16px rgba(0,0,0,.18)}
+.toast.ok{background:#f0fdf4;border:1px solid #86efac;color:#15803d}
+.toast.bad{background:#fef2f2;border:1px solid #fca5a5;color:#dc2626}
+.spin{display:inline-block;width:34px;height:34px;border:3px solid #cbd5e1;
+  border-top-color:#2563eb;border-radius:50%;animation:sp 1s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.center{min-height:60vh;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;color:#64748b}
+.kpis{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.kpi{background:#fff;border:1px solid #e2e8f0;border-radius:9px;padding:12px 16px;flex:1;min-width:150px}
+.kpi .n{font-size:22px;font-weight:bold;color:#15325a}
+.kpi .l{font-size:11px;color:#64748b;margin-top:2px}
+</style>
+</head>
+<body>
+<div id="toast"></div>
+<div id="root"><div class="center"><div class="spin"></div><div>Loading…</div></div></div>
+
+<script type="text/babel">
+const { useState, useEffect, useCallback } = React;
+
+const SB_URL = "https://hxeiiaokpspkaalzpvrs.supabase.co";
+const SB_KEY = "sb_publishable_QfrQsAKebuxrBRBRJKq9ow_EcEHxTXn";
+const REST = SB_URL + "/rest/v1";
+const AUTHX = SB_URL + "/auth/v1";
+
+// ---- tiny supabase client (auth + rest) ----
+const store = {
+  get tok(){ try{return JSON.parse(localStorage.getItem("dhm_proc_sess")||"null");}catch(e){return null;} },
+  set tok(v){ if(v) localStorage.setItem("dhm_proc_sess",JSON.stringify(v)); else localStorage.removeItem("dhm_proc_sess"); }
+};
+
+function authHeaders(){
+  const s = store.tok;
+  return {
+    "apikey": SB_KEY,
+    "Authorization": "Bearer " + (s && s.access_token ? s.access_token : SB_KEY),
+    "Content-Type": "application/json"
+  };
+}
+
+async function signIn(email, password){
+  const r = await fetch(AUTHX + "/token?grant_type=password", {
+    method:"POST",
+    headers:{ "apikey":SB_KEY, "Content-Type":"application/json" },
+    body: JSON.stringify({ email, password })
+  });
+  const d = await r.json();
+  if(!r.ok) throw new Error(d.error_description || d.msg || d.error || "Login failed");
+  store.tok = d;
+  return d;
+}
+async function signOut(){
+  try{
+    await fetch(AUTHX + "/logout", { method:"POST", headers:authHeaders() });
+  }catch(e){}
+  store.tok = null;
+}
+async function changePassword(newPassword){
+  const r = await fetch(AUTHX + "/user", {
+    method:"PUT", headers:authHeaders(),
+    body: JSON.stringify({ password: newPassword })
+  });
+  const d = await r.json();
+  if(!r.ok) throw new Error(d.msg || d.error_description || "Could not change password");
+  return d;
+}
+async function createUser(email, password){
+  // signs up a new auth user (used by admin to add staff)
+  const r = await fetch(AUTHX + "/signup", {
+    method:"POST",
+    headers:{ "apikey":SB_KEY, "Content-Type":"application/json" },
+    body: JSON.stringify({ email, password })
+  });
+  const d = await r.json();
+  if(!r.ok) throw new Error(d.msg || d.error_description || d.error || "Could not create user");
+  return d;
+}
+
+async function rest(path, opts={}){
+  const r = await fetch(REST + path, { headers:authHeaders(), ...opts });
+  if(r.status === 401){ store.tok = null; location.reload(); return; }
+  const txt = await r.text();
+  let data = null;
+  try{ data = txt ? JSON.parse(txt) : null; }catch(e){ data = txt; }
+  if(!r.ok) throw new Error((data && data.message) || ("Request failed ("+r.status+")"));
+  return data;
+}
+
+function toast(msg, bad){
+  const t = document.getElementById("toast");
+  t.innerHTML = '<div class="toast '+(bad?"bad":"ok")+'">'+(bad?"⚠ ":"✓ ")+msg+'</div>';
+  setTimeout(()=>{ t.innerHTML=""; }, 2800);
+}
+
+const fmtNum = n => (n===null||n===undefined||n==="") ? "" :
+  Number(n).toLocaleString("en-IN", {maximumFractionDigits:2});
+const pct = n => (n===null||n===undefined||n==="") ? 0 : Math.max(0,Math.min(100,Number(n)));
+
+const WORK_TYPES = [["","—"],["consulting","Consulting"],["goods","Goods"],["works","Works"]];
+const PROC_PROCS = [["","—"],["eoi","EOI"],["rfp","RFP"],["direct","Direct"],["ncb","NCB"],["icb","ICB"],["quotation","Quotation"]];
+
+// ================= LOGIN =================
+function Login({ onDone }){
+  const [email,setEmail]=useState("");
+  const [pw,setPw]=useState("");
+  const [err,setErr]=useState("");
+  const [busy,setBusy]=useState(false);
+  const submit = async ()=>{
+    setErr(""); setBusy(true);
+    try{ await signIn(email.trim(), pw); onDone(); }
+    catch(e){ setErr(e.message); setBusy(false); }
+  };
+  return (
+    <div className="login-page">
+      <div className="login-card">
+        <div className="login-hd">
+          <div className="logo">🏛️</div>
+          <div className="t">DHM Procurement &amp; Progress Tracker</div>
+          <div className="s">Department of Hydrology &amp; Meteorology · Nepal<br/>Authorised staff only</div>
+        </div>
+        <div className="login-bd">
+          {err && <div className="err">{err}</div>}
+          <div className="fld">
+            <label>Email</label>
+            <input type="email" value={email} autoFocus
+              onChange={e=>setEmail(e.target.value)}
+              onKeyDown={e=>{ if(e.key==="Enter") submit(); }} />
+          </div>
+          <div className="fld">
+            <label>Password</label>
+            <input type="password" value={pw}
+              onChange={e=>setPw(e.target.value)}
+              onKeyDown={e=>{ if(e.key==="Enter") submit(); }} />
+          </div>
+          <button className="btn btn-primary btn-block" disabled={busy} onClick={submit}>
+            {busy ? "Signing in…" : "Sign In →"}
+          </button>
+          <div className="hint">Accounts are created by the administrator.</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ================= PROJECT MODAL =================
+function ProjectModal({ project, me, divisions, sections, onClose, onSaved }){
+  const blank = {
+    name_np:"", project_title_en:"", activity_no:"", lmbis_code:"", expense_head:"",
+    division_id: me.division_id || (divisions[0] && divisions[0].id),
+    section_id:"", work_type:"", proc_procedure:"",
+    fiscal_year:"", total_project_cost:"", current_fy_budget:"", allocated_budget:"",
+    expense_to_date:"", financial_progress:"", physical_progress:"",
+    contract_amount:"", current_status:"", status_as_of_date:"", ifb_no:"",
+    recommended_by_name:"", approved_by_name:"", remarks:""
+  };
+  const [f,setF]=useState(project ? {...blank, ...project} : blank);
+  const [busy,setBusy]=useState(false);
+  const set = (k,v)=> setF(prev=>({...prev,[k]:v}));
+  const isEdit = !!project;
+  const myDiv = me.role==="admin" ? Number(f.division_id) : me.division_id;
+  const secOpts = sections.filter(s=> s.division_id === Number(f.division_id));
+
+  const numFields = ["total_project_cost","current_fy_budget","allocated_budget",
+    "expense_to_date","financial_progress","physical_progress","contract_amount"];
+
+  const save = async ()=>{
+    if(!f.name_np || !f.name_np.trim()){ toast("Project name (Nepali) is required", true); return; }
+    setBusy(true);
+    const body = {
+      name_np:f.name_np, project_title_en:f.project_title_en||null,
+      activity_no:f.activity_no||null, lmbis_code:f.lmbis_code||null,
+      expense_head:f.expense_head||null,
+      division_id:Number(f.division_id), owner_division:Number(f.division_id),
+      section_id: f.section_id ? Number(f.section_id) : null,
+      work_type:f.work_type||null, proc_procedure:f.proc_procedure||null,
+      fiscal_year:f.fiscal_year||null,
+      current_status:f.current_status||null, status_as_of_date:f.status_as_of_date||null,
+      ifb_no:f.ifb_no||null, recommended_by_name:f.recommended_by_name||null,
+      approved_by_name:f.approved_by_name||null, remarks:f.remarks||null,
+      updated_at: new Date().toISOString()
+    };
+    numFields.forEach(k=>{ body[k] = (f[k]==="" || f[k]===null || f[k]===undefined) ? null : Number(f[k]); });
+    try{
+      if(isEdit){
+        await rest("/projects?id=eq."+project.id, { method:"PATCH",
+          headers:{...authHeaders(), Prefer:"return=minimal"}, body:JSON.stringify(body) });
+        toast("Project updated");
+      }else{
+        body.created_by_name = me.full_name || me.email;
+        await rest("/projects", { method:"POST",
+          headers:{...authHeaders(), Prefer:"return=minimal"}, body:JSON.stringify(body) });
+        toast("Project added");
+      }
+      onSaved();
+    }catch(e){ toast(e.message, true); setBusy(false); }
+  };
+
+  const I = (label,key,type="text") => (
+    <div className="fld">
+      <label>{label}</label>
+      <input type={type} value={f[key]==null?"":f[key]} onChange={e=>set(key,e.target.value)} />
+    </div>
+  );
+
+  return (
+    <div className="ov" onClick={e=>{ if(e.target.className==="ov") onClose(); }}>
+      <div className="modal">
+        <div className="modal-hd">
+          <span>{isEdit ? "Edit Project" : "Add New Project"}</span>
+          <span className="x" onClick={onClose}>✕</span>
+        </div>
+        <div className="modal-bd">
+          <div className="sec-label">Identification</div>
+          <div className="fld">
+            <label>Project Name (Nepali) *</label>
+            <input value={f.name_np||""} autoFocus onChange={e=>set("name_np",e.target.value)} />
+          </div>
+          {I("Project Title (English)","project_title_en")}
+          <div className="grid3">
+            {I("Activity No.","activity_no")}
+            {I("LMBIS Code","lmbis_code")}
+            {I("Expense Head","expense_head")}
+          </div>
+
+          <div className="sec-label">Classification</div>
+          <div className="grid3">
+            <div className="fld">
+              <label>Division</label>
+              <select value={f.division_id||""} disabled={me.role!=="admin"}
+                onChange={e=>{ set("division_id",e.target.value); set("section_id",""); }}>
+                {divisions.map(d=> <option key={d.id} value={d.id}>{d.name}</option>)}
+              </select>
+            </div>
+            <div className="fld">
+              <label>Section</label>
+              <select value={f.section_id||""} onChange={e=>set("section_id",e.target.value)}>
+                <option value="">—</option>
+                {secOpts.map(s=> <option key={s.id} value={s.id}>{s.name}</option>)}
+              </select>
+            </div>
+            {I("Fiscal Year (e.g. 2081/82)","fiscal_year")}
+          </div>
+          <div className="grid3">
+            <div className="fld">
+              <label>Work Type</label>
+              <select value={f.work_type||""} onChange={e=>set("work_type",e.target.value)}>
+                {WORK_TYPES.map(([v,l])=> <option key={v} value={v}>{l}</option>)}
+              </select>
+            </div>
+            <div className="fld">
+              <label>Procurement Procedure</label>
+              <select value={f.proc_procedure||""} onChange={e=>set("proc_procedure",e.target.value)}>
+                {PROC_PROCS.map(([v,l])=> <option key={v} value={v}>{l}</option>)}
+              </select>
+            </div>
+            {I("IFB / Notice No.","ifb_no")}
+          </div>
+
+          <div className="sec-label">Budget &amp; Cost (NPR)</div>
+          <div className="grid3">
+            {I("Total Project Cost","total_project_cost","number")}
+            {I("Current FY Budget","current_fy_budget","number")}
+            {I("Allocated Budget","allocated_budget","number")}
+          </div>
+          <div className="grid3">
+            {I("Expense to Date","expense_to_date","number")}
+            {I("Contract Amount","contract_amount","number")}
+            <div></div>
+          </div>
+
+          <div className="sec-label">Progress</div>
+          <div className="grid3">
+            {I("Financial Progress (%)","financial_progress","number")}
+            {I("Physical Progress (%)","physical_progress","number")}
+            {I("Status as of (date)","status_as_of_date")}
+          </div>
+          <div className="fld">
+            <label>Current Status</label>
+            <input value={f.current_status||""} onChange={e=>set("current_status",e.target.value)} />
+          </div>
+
+          <div className="sec-label">Approvals &amp; Notes</div>
+          <div className="grid2">
+            {I("Recommended By","recommended_by_name")}
+            {I("Approved By","approved_by_name")}
+          </div>
+          <div className="fld">
+            <label>Remarks</label>
+            <textarea rows="2" style={{width:"100%",padding:"8px 11px",border:"1px solid #d1d5db",borderRadius:"6px"}}
+              value={f.remarks||""} onChange={e=>set("remarks",e.target.value)}></textarea>
+          </div>
+        </div>
+        <div className="modal-ft">
+          <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
+          <button className="btn btn-primary" disabled={busy} onClick={save}>
+            {busy ? "Saving…" : (isEdit ? "Save Changes" : "Add Project")}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ================= CHANGE PASSWORD =================
+function PwModal({ onClose }){
+  const [pw,setPw]=useState(""); const [pw2,setPw2]=useState("");
+  const [busy,setBusy]=useState(false);
+  const save = async ()=>{
+    if(pw.length < 6){ toast("Password must be at least 6 characters", true); return; }
+    if(pw !== pw2){ toast("Passwords do not match", true); return; }
+    setBusy(true);
+    try{ await changePassword(pw); toast("Password changed ✓"); onClose(); }
+    catch(e){ toast(e.message, true); setBusy(false); }
+  };
+  return (
+    <div className="ov" onClick={e=>{ if(e.target.className==="ov") onClose(); }}>
+      <div className="modal" style={{maxWidth:"380px"}}>
+        <div className="modal-hd"><span>Change My Password</span><span className="x" onClick={onClose}>✕</span></div>
+        <div className="modal-bd">
+          <div className="fld"><label>New Password</label>
+            <input type="password" autoFocus value={pw} onChange={e=>setPw(e.target.value)} /></div>
+          <div className="fld"><label>Confirm New Password</label>
+            <input type="password" value={pw2} onChange={e=>setPw2(e.target.value)}
+              onKeyDown={e=>{ if(e.key==="Enter") save(); }} /></div>
+        </div>
+        <div className="modal-ft">
+          <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
+          <button className="btn btn-primary" disabled={busy} onClick={save}>{busy?"Saving…":"Save Password"}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ================= STAFF PANEL (admin) =================
+function StaffPanel({ divisions }){
+  const [profiles,setProfiles]=useState([]);
+  const [email,setEmail]=useState(""); const [pw,setPw]=useState("");
+  const [name,setName]=useState(""); const [role,setRole]=useState("staff");
+  const [divId,setDivId]=useState(divisions[0] && divisions[0].id);
+  const [busy,setBusy]=useState(false);
+  const load = useCallback(async ()=>{
+    try{ const d = await rest("/profiles?select=*&order=created_at"); setProfiles(d||[]); }catch(e){ toast(e.message,true); }
+  },[]);
+  useEffect(()=>{ load(); },[load]);
+
+  const add = async ()=>{
+    if(!email.trim() || pw.length<6){ toast("Email and a 6+ char password required", true); return; }
+    setBusy(true);
+    try{
+      const created = await createUser(email.trim(), pw);
+      const uid = created.user ? created.user.id : created.id;
+      // upsert profile (auto-profile trigger may have made one; patch it with details)
+      await rest("/profiles?id=eq."+uid, { method:"PATCH",
+        headers:{...authHeaders(), Prefer:"return=minimal"},
+        body: JSON.stringify({ full_name:name||null, role, division_id:Number(divId) }) });
+      toast("Staff account created");
+      setEmail(""); setPw(""); setName("");
+      load();
+    }catch(e){ toast(e.message, true); }
+    setBusy(false);
+  };
+  const updateProfile = async (id, patch)=>{
+    try{
+      await rest("/profiles?id=eq."+id, { method:"PATCH",
+        headers:{...authHeaders(), Prefer:"return=minimal"}, body:JSON.stringify(patch) });
+      toast("Updated"); load();
+    }catch(e){ toast(e.message, true); }
+  };
+  const divName = id => { const d = divisions.find(x=>x.id===id); return d ? d.name : "—"; };
+
+  return (
+    <div>
+      <div className="card" style={{marginBottom:"16px"}}>
+        <div style={{padding:"12px 16px",borderBottom:"1px solid #e2e8f0",fontWeight:"bold",color:"#15325a"}}>
+          ➕ Create Staff Account
+        </div>
+        <div style={{padding:"14px 16px"}}>
+          <div className="grid3" style={{marginBottom:"10px"}}>
+            <div className="fld" style={{margin:0}}><label>Email</label>
+              <input type="email" value={email} onChange={e=>setEmail(e.target.value)} /></div>
+            <div className="fld" style={{margin:0}}><label>Temp Password (6+ chars)</label>
+              <input type="text" value={pw} onChange={e=>setPw(e.target.value)} /></div>
+            <div className="fld" style={{margin:0}}><label>Full Name</label>
+              <input value={name} onChange={e=>setName(e.target.value)} /></div>
+          </div>
+          <div className="grid3" style={{alignItems:"end"}}>
+            <div className="fld" style={{margin:0}}><label>Role</label>
+              <select value={role} onChange={e=>setRole(e.target.value)}>
+                <option value="staff">Staff</option><option value="admin">Admin</option>
+              </select></div>
+            <div className="fld" style={{margin:0}}><label>Division</label>
+              <select value={divId} onChange={e=>setDivId(e.target.value)}>
+                {divisions.map(d=> <option key={d.id} value={d.id}>{d.name}</option>)}
+              </select></div>
+            <button className="btn btn-primary" disabled={busy} onClick={add} style={{height:"38px"}}>
+              {busy ? "Creating…" : "+ Create Account"}
+            </button>
+          </div>
+          <div className="muted" style={{fontSize:"11px",marginTop:"8px"}}>
+            New users sign in with the email + temp password, then change it from 🔑 Password.
+          </div>
+        </div>
+      </div>
+
+      <div className="card">
+        <div className="tbl-scroll">
+          <table className="grid">
+            <thead><tr><th>Email</th><th>Name</th><th>Role</th><th>Division</th></tr></thead>
+            <tbody>
+              {profiles.length===0 && <tr><td colSpan="4" className="empty">No staff yet.</td></tr>}
+              {profiles.map(p=>(
+                <tr key={p.id}>
+                  <td className="mono">{p.email||"—"}</td>
+                  <td>{p.full_name||"—"}</td>
+                  <td>
+                    <select value={p.role} onChange={e=>updateProfile(p.id,{role:e.target.value})}>
+                      <option value="staff">Staff</option><option value="admin">Admin</option>
+                    </select>
+                  </td>
+                  <td>
+                    <select value={p.division_id||""} onChange={e=>updateProfile(p.id,{division_id:e.target.value?Number(e.target.value):null})}>
+                      <option value="">—</option>
+                      {divisions.map(d=> <option key={d.id} value={d.id}>{d.name}</option>)}
+                    </select>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ================= PROJECTS =================
+function Projects({ me, divisions, sections }){
+  const [rows,setRows]=useState(null);
+  const [q,setQ]=useState("");
+  const [divFilter,setDivFilter]=useState("all");
+  const [modal,setModal]=useState(null); // {project} or {new:true}
+  const load = useCallback(async ()=>{
+    try{
+      const d = await rest("/projects?select=*&order=updated_at.desc");
+      setRows(d||[]);
+    }catch(e){ toast(e.message, true); setRows([]); }
+  },[]);
+  useEffect(()=>{ load(); },[load]);
+
+  const divName = id => { const d=divisions.find(x=>x.id===id); return d?d.name:"—"; };
+  const secName = id => { const s=sections.find(x=>x.id===id); return s?s.name:""; };
+  const canEdit = p => me.role==="admin" || p.owner_division===me.division_id;
+
+  const del = async (p)=>{
+    if(!confirm('Delete project "'+(p.name_np||"")+'"?\nThis cannot be undone.')) return;
+    try{
+      await rest("/projects?id=eq."+p.id, { method:"DELETE", headers:{...authHeaders(),Prefer:"return=minimal"} });
+      toast("Project deleted"); load();
+    }catch(e){ toast(e.message, true); }
+  };
+
+  let view = rows || [];
+  if(divFilter!=="all") view = view.filter(p=> p.owner_division===Number(divFilter));
+  if(q.trim()){
+    const s=q.toLowerCase();
+    view = view.filter(p=> (p.name_np||"").toLowerCase().includes(s)
+      || (p.project_title_en||"").toLowerCase().includes(s)
+      || (p.activity_no||"").toLowerCase().includes(s)
+      || (p.lmbis_code||"").toLowerCase().includes(s));
+  }
+
+  const totBudget = view.reduce((a,p)=> a + (Number(p.allocated_budget)||0), 0);
+  const totExpense = view.reduce((a,p)=> a + (Number(p.expense_to_date)||0), 0);
+
+  if(rows===null) return <div className="center"><div className="spin"></div><div>Loading projects…</div></div>;
+
+  return (
+    <div>
+      <div className="kpis">
+        <div className="kpi"><div className="n">{view.length}</div><div className="l">Projects shown</div></div>
+        <div className="kpi"><div className="n">{fmtNum(totBudget)}</div><div className="l">Allocated budget (NPR)</div></div>
+        <div className="kpi"><div className="n">{fmtNum(totExpense)}</div><div className="l">Expense to date (NPR)</div></div>
+      </div>
+
+      <div className="toolbar">
+        <input className="search" placeholder="Search name, title, activity, LMBIS…"
+          value={q} onChange={e=>setQ(e.target.value)} />
+        <select className="filter-sel" value={divFilter} onChange={e=>setDivFilter(e.target.value)}>
+          <option value="all">All divisions</option>
+          {divisions.map(d=> <option key={d.id} value={d.id}>{d.name}</option>)}
+        </select>
+        <div className="grow"></div>
+        <button className="btn btn-primary" onClick={()=>setModal({new:true})}>+ Add Project</button>
+      </div>
+
+      <div className="card">
+        <div className="tbl-scroll">
+          <table className="grid">
+            <thead>
+              <tr>
+                <th>Project (Nepali)</th><th>Title (EN)</th><th>Division</th><th>Section</th>
+                <th>Work</th><th>Proc.</th><th>FY</th>
+                <th className="right">Allocated</th><th className="right">Expense</th>
+                <th>Financial</th><th>Physical</th><th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {view.length===0 && <tr><td colSpan="12" className="empty">
+                {rows.length===0 ? "No projects yet. Click “+ Add Project” to create the first one." : "No projects match your filter."}
+              </td></tr>}
+              {view.map(p=>{
+                const ce = canEdit(p);
+                return (
+                  <tr key={p.id}>
+                    <td style={{maxWidth:"220px"}}>{p.name_np}</td>
+                    <td style={{maxWidth:"180px"}} className="muted">{p.project_title_en||"—"}</td>
+                    <td><span className={"tag "+(p.owner_division===1?"tag-div1":"tag-div2")}>
+                      {p.owner_division===1?"Hydro & Cryo":"Flood Forecast"}</span></td>
+                    <td className="muted">{secName(p.section_id)||"—"}</td>
+                    <td><span className="tag tag-gray">{p.work_type||"—"}</span></td>
+                    <td><span className="tag tag-gray">{(p.proc_procedure||"—").toUpperCase()}</span></td>
+                    <td className="mono">{p.fiscal_year||"—"}</td>
+                    <td className="right mono">{fmtNum(p.allocated_budget)||"—"}</td>
+                    <td className="right mono">{fmtNum(p.expense_to_date)||"—"}</td>
+                    <td>
+                      <div className="bar fin"><i style={{width:pct(p.financial_progress)+"%"}}></i></div>
+                      <span className="muted" style={{fontSize:"10px"}}>{pct(p.financial_progress)}%</span>
+                    </td>
+                    <td>
+                      <div className="bar"><i style={{width:pct(p.physical_progress)+"%"}}></i></div>
+                      <span className="muted" style={{fontSize:"10px"}}>{pct(p.physical_progress)}%</span>
+                    </td>
+                    <td style={{whiteSpace:"nowrap"}}>
+                      {ce ? <>
+                        <button className="linkbtn" onClick={()=>setModal({project:p})}>✏ Edit</button>
+                        <button className="linkbtn del" onClick={()=>del(p)}>✕ Del</button>
+                      </> : <span className="muted" style={{fontSize:"11px"}}>view only</span>}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {modal && (
+        <ProjectModal
+          project={modal.project || null} me={me}
+          divisions={divisions} sections={sections}
+          onClose={()=>setModal(null)}
+          onSaved={()=>{ setModal(null); load(); }} />
+      )}
+    </div>
+  );
+}
+
+// ================= APP =================
+function App(){
+  const [phase,setPhase]=useState("boot"); // boot|login|ready
+  const [me,setMe]=useState(null);
+  const [divisions,setDivisions]=useState([]);
+  const [sections,setSections]=useState([]);
+  const [tab,setTab]=useState("projects");
+  const [pwModal,setPwModal]=useState(false);
+
+  const loadMe = useCallback(async ()=>{
+    const s = store.tok;
+    if(!s || !s.access_token){ setPhase("login"); return; }
+    try{
+      // who am I
+      const uid = s.user ? s.user.id : null;
+      const prof = await rest("/profiles?select=*"+(uid?("&id=eq."+uid):"")+"&limit=1");
+      const divs = await rest("/divisions?select=*&order=id");
+      const secs = await rest("/sections?select=*&order=id");
+      setDivisions(divs||[]); setSections(secs||[]);
+      let m = (prof && prof[0]) ? prof[0] : null;
+      if(!m){
+        // fallback: pull from token email
+        m = { id: uid, email: s.user && s.user.email, role:"staff", division_id:null, full_name:null };
+      }
+      setMe(m); setPhase("ready");
+    }catch(e){
+      // token likely expired
+      store.tok = null; setPhase("login");
+    }
+  },[]);
+
+  useEffect(()=>{ loadMe(); },[loadMe]);
+
+  const doLogout = async ()=>{ await signOut(); setMe(null); setPhase("login"); };
+
+  if(phase==="boot") return <div className="center"><div className="spin"></div><div>Loading…</div></div>;
+  if(phase==="login") return <Login onDone={()=>{ setPhase("boot"); loadMe(); }} />;
+
+  const isAdmin = me.role==="admin";
+  return (
+    <div>
+      <div className="topbar">
+        <span className="title">🏛️ DHM Procurement &amp; Progress Tracker</span>
+        <div className="spacer"></div>
+        <span className="pill">👤 {me.full_name || me.email} · {isAdmin?"Admin":"Staff"}</span>
+        <button className="tb-btn" onClick={()=>setPwModal(true)}>🔑 Password</button>
+        <button className="tb-btn danger" onClick={doLogout}>Sign Out</button>
+      </div>
+      <div className="tabs">
+        <button className={"tab"+(tab==="projects"?" active":"")} onClick={()=>setTab("projects")}>📋 Projects</button>
+        {isAdmin && <button className={"tab"+(tab==="staff"?" active":"")} onClick={()=>setTab("staff")}>👥 Staff</button>}
+      </div>
+      <div className="wrap">
+        {tab==="projects" && <Projects me={me} divisions={divisions} sections={sections} />}
+        {tab==="staff" && isAdmin && <StaffPanel divisions={divisions} />}
+      </div>
+      {pwModal && <PwModal onClose={()=>setPwModal(false)} />}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
